@@ -1,0 +1,44 @@
+version: "3"
+services:
+  cassandra1:
+    image: cassandra:latest
+    ports:
+      - "9042"
+    networks:
+      cassandra-net:
+        ipv4_address: 172.28.1.2
+    environment:
+      - CASSANDRA_SEEDS=172.28.1.2,172.28.1.3,172.28.1.4
+      - CASSANDRA_CLUSTER_NAME=mycluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+  cassandra2:
+    image: cassandra:latest
+    ports:
+      - "9042"
+    networks:
+      cassandra-net:
+        ipv4_address: 172.28.1.3
+    environment:
+      - CASSANDRA_SEEDS=172.28.1.2,172.28.1.3,172.28.1.4
+      - CASSANDRA_CLUSTER_NAME=mycluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+  cassandra3:
+    image: cassandra:latest
+    ports:
+      - "9042"
+    networks:
+      cassandra-net:
+        ipv4_address: 172.28.1.4
+    environment:
+      - CASSANDRA_SEEDS=172.28.1.2,172.28.1.3,172.28.1.4
+      - CASSANDRA_CLUSTER_NAME=mycluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+networks:
+  cassandra-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,77 @@
+- name: Install and configure OpenLDAP
+  hosts: all
+  vars:
+    ldap_base_dn: "dc=mydomain,dc=com"
+    ldap_domain: "mydomain"
+    ldap_organization: "My Organization"
+    ldap_admin_password: "mysecretpassword"
+
+  tasks:
+    - name: Install OpenLDAP server
+      apt:
+        name: slapd ldap-utils
+        state: present
+
+    - name: Add LDAP users
+      ldap_entry:
+        dn: "uid={{ item.username }},{{ ldap_base_dn }}"
+        attributes:
+          objectClass: [ 'top', 'person', 'organizationalPerson', 'inetOrgPerson' ]
+          uid: "{{ item.username }}"
+          cn: "{{ item.name }}"
+          sn: "{{ item.lastname }}"
+          userPassword: "{{ item.password | password_hash('sha256') }}"
+          mail: "{{ item.email }}"
+        state: present
+        ldap_uri: ldapi:///
+        ldap_username: cn=admin,{{ ldap_base_dn }}
+        ldap_password: "{{ ldap_admin_password }}"
+      with_items:
+        - { username: "user1", name: "Farrukh", lastname: "Sharipov", password: "user1pass", email: "user1@example.com" }
+        - { username: "user2", name: "Ivan", lastname: "Andreivich", password: "user2pass", email: "user2@example.com" }
+
+    - name: Set OpenLDAP admin password
+      ldap_entry:
+        dn: "dc={{ ldap_domain }},{{ ldap_base_dn }}"
+        attributes:
+          objectClass: [ 'top', 'dcObject', 'organization' ]
+          dc: "{{ ldap_domain }}"
+          o: "{{ ldap_organization }}"
+        state: present
+        ldap_uri: ldapi:///
+        ldap_username: cn=admin,{{ ldap_base_dn }}
+        ldap_password: "{{ ldap_admin_password }}"
+
+    - name: Add LDAP users
+      ldap_entry:
+        dn: "uid={{ item.username }},{{ ldap_base_dn }}"
+        attributes:
+          objectClass: [ 'top', 'person', 'organizationalPerson', 'inetOrgPerson' ]
+          uid: "{{ item.username }}"
+          cn: "{{ item.name }}"
+          sn: "{{ item.lastname }}"
+          userPassword: "{{ item.password | password_hash('sha256') }}"
+          mail: "{{ item.email }}"
+        state: present
+        ldap_uri: ldapi:///
+        ldap_username: cn=admin,{{ ldap_base_dn }}
+        ldap_password: "{{ ldap_admin_password }}"
+      with_items:
+        - { username: "user1", name: "Farrukh", lastname: "Sharipov", password: "user1pass", email: "user1@example.com" }
+        - { username: "user2", name: "Ivan", lastname: "Andreivich", password: "user2pass", email: "user2@example.com" }
+
+    - name: Add LDAP groups
+      ldap_entry:
+        dn: "cn={{ item.groupname }},ou=Groups,{{ ldap_base_dn }}"
+        attributes:
+          objectClass: [ 'top', 'groupOfNames' ]
+          cn: "{{ item.groupname }}"
+          member1: "uid=user1,{{ ldap_base_dn }}"
+          member2: "uid=user2,{{ ldap_base_dn }}"
+        state: present
+        ldap_uri: ldapi:///
+        ldap_username: cn=admin,{{ ldap_base_dn }}
+        ldap_password: "{{ ldap_admin_password }}"
+      with_items:
+        - { groupname: "group1" }
+        - { groupname: "group2" }
